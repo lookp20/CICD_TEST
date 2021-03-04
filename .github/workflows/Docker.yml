@@ -1,0 +1,30 @@
+name: DOCKER - Workflow
+
+on:   
+release: 
+    types: [published] 
+    
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Docker Login
+      uses: docker/login-action@v1 
+      with: 
+        username: ${{ secrets.DOCKERHUB_USERNAME }}   
+        password: ${{ secrets.DOCKERHUB_PASSWORD }} 
+    - name: Build Dockerfile
+      run: |
+        docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:$(git describe --tags --abbrev=0) 
+    - name: Pushe Dockerfile
+      run: |
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:$(git describe --tags --abbrev=0) 
+    - name: Füge latest-tag hinzu
+      run: |
+        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:$(git describe --tags --abbrev=0) ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:latest
+    - name: Pushe Dockerfile
+      run: |
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:latest 
